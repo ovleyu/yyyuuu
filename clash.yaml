@@ -1,0 +1,615 @@
+
+
+
+
+## 基础设置，部分 一般不做修改
+##
+##
+port: 7890
+socks-port: 7891
+redir-port: 7892
+tproxy-port: 7893
+mixed-port: 7890
+allow-lan: true
+bind-address: "*"
+mode: rule
+log-level: info
+#external-controller: 127.0.0.1:9090
+profile:
+  store-selected: false
+  tracing: false
+  store-fake-ip: false
+dns:
+  enable: true
+  ipv6: false
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 119.28.28.28
+    - 223.6.6.6
+    - 1.2.4.8
+    - 8.8.8.8
+    - 180.184.1.1
+  listen: 0.0.0.0:1053
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  use-hosts: true
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+  fake-ip-filter:
+    - '*.lan'
+    - localhost.ptlogin2.qq.com
+    - '+.srv.nintendo.net'
+    - '+.stun.playstation.net'
+    - '+.msftconnecttest.com'
+    - '+.msftncsi.com'
+    - '+.xboxlive.com'
+    - 'msftconnecttest.com'
+    - 'xbox.*.microsoft.com'
+    - '*.battlenet.com.cn'
+    - '*.battlenet.com'
+    - '*.blzstatic.cn'
+    - '*.battle.net'
+
+## 远程订阅
+##
+##
+
+# 机场订阅
+proxy-providers:
+  airport00_Subscription:
+    type: http
+    url: "http://127.0.0.1:3000/download/Alpha"
+    path: ./providers/proxy/aiport00.yaml
+    interval: 86400
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 86400
+
+  airport01_Subscription:
+    type: http
+    url: "http://127.0.0.1:3000/download/ctc"
+    path: ./providers/proxy/aiport01.yaml
+    interval: 86400
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 86400
+
+  airport02_Subscription:
+    type: http
+    url: "http://127.0.0.1:3000/download/ctc2"
+    path: ./providers/proxy/aiport02.yaml
+    interval: 86400
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 86400
+
+
+## 策略组
+##
+##
+
+proxy-groups:
+  - name: 𝑷𝒓𝒐𝒙𝒚
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Universal/Auto_Speed.png
+    type: select
+    proxies: 
+      - Alpha
+      - ctc
+      - ctc2
+
+
+
+  - name: Alpha
+    icon: https://raw.githubusercontent.com/fmz200/wool_scripts/main/icons/apps/Category_News.png
+    type: select
+    use: 
+      - airport00_Subscription
+
+  - name: ctc
+    icon: https://raw.githubusercontent.com/fmz200/wool_scripts/main/icons/apps/Category_News.png
+    type: select
+    use: 
+      - airport01_Subscription
+
+  - name: ctc2
+    icon: https://raw.githubusercontent.com/fmz200/wool_scripts/main/icons/apps/Category_News.png
+    type: select
+    use: 
+      - airport02_Subscription
+
+
+  - name: 𝒀𝒐𝒖𝑻𝒖𝒃𝒆
+    type: select
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/YouTube.png
+    proxies:
+      - 𝑷𝒓𝒐𝒙𝒚
+      - 𝑯𝑲
+      - 𝑻𝑾
+      - 𝑼𝑺
+      - 𝑱𝑷
+      - 𝑺𝑮
+
+  - name: 𝑵𝒆𝒕𝒇𝒍𝒊𝒙
+    type: select
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Universal/Netflix.png
+    proxies:
+      - 𝑷𝒓𝒐𝒙𝒚
+      - 𝑯𝑲
+      - 𝑻𝑾
+      - 𝑼𝑺
+      - 𝑱𝑷
+      - 𝑺𝑮
+
+  - name: 𝑫𝒊𝒔𝒏𝒆𝒚
+    type: select
+    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/disney(blue).png
+    proxies:
+      - 𝑷𝒓𝒐𝒙𝒚
+      - 𝑯𝑲
+      - 𝑻𝑾
+      - 𝑼𝑺
+      - 𝑱𝑷
+      - 𝑺𝑮
+
+  - name: 𝑯𝑩𝑶
+    type: select
+    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/HBO.png
+    proxies:
+      - 𝑷𝒓𝒐𝒙𝒚
+      - 𝑯𝑲
+      - 𝑻𝑾
+      - 𝑼𝑺
+      - 𝑱𝑷
+      - 𝑺𝑮
+
+  - name: 动画疯
+    type: select
+    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/bahamute.png
+    proxies: 
+      - Alpha
+      - ctc
+      - ctc2
+
+  - name: 𝑺𝒑𝒐𝒕𝒊𝒇𝒚
+    type: select
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/Spotify.png
+    proxies:
+      - 𝑷𝒓𝒐𝒙𝒚
+      - 𝑯𝑲
+      - 𝑻𝑾
+      - 𝑼𝑺
+      - 𝑱𝑷
+      - 𝑺𝑮
+
+  - name: 𝑻𝒆𝒍𝒆𝒈𝒓𝒂𝒎
+    type: select
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/Telegram.png
+    filter: (?i)狮|獅|🇸🇬|加坡|SG|Singapore
+    use: 
+      - airport00_Subscription
+      - airport01_Subscription
+      - airport02_Subscription
+ 
+  - name: 𝑭𝒂𝒄𝒆𝒃𝒐𝒐𝒌
+    type: select
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/Facebook.png
+    proxies:
+      - 𝑷𝒓𝒐𝒙𝒚
+      - 𝑯𝑲
+      - 𝑻𝑾
+      - 𝑼𝑺
+      - 𝑱𝑷
+      - 𝑺𝑮
+
+  - name: 𝑻𝒘𝒊𝒕𝒕𝒆𝒓
+    type: select
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/Twitter.png
+    proxies:
+      - 𝑷𝒓𝒐𝒙𝒚
+      - 𝑯𝑲
+      - 𝑻𝑾
+      - 𝑼𝑺
+      - 𝑱𝑷
+      - 𝑺𝑮
+
+  - name: 𝑬𝒎𝒃𝒚
+    type: select
+    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/emby.png
+    filter: (?i)美(国|國)|🇺🇸|US|States|American
+    proxies: 
+      - Alpha
+      - ctc
+      - ctc2
+
+  - name: 𝑻𝒊𝒌𝑻𝒐𝒌
+    type: select
+    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/emby.png
+    proxies: 
+      - 𝑻𝑾
+      - 𝑼𝑺
+      - 𝑱𝑷
+
+  - name: 𝑶𝒑𝒆𝒏𝑨𝑰
+    type: select
+    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/chatgpt4.0.png
+    filter: (?i)美(国|國)|🇺🇸|US|States|American
+    use: 
+      - airport00_Subscription
+      - airport01_Subscription
+      - airport02_Subscription
+
+
+  - name: 𝑨𝒑𝒑𝒍𝒆
+    type: select
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/Apple.png
+    proxies:
+      - 𝑻𝑾
+      - 𝑼𝑺
+      - 𝑱𝑷
+      - DIRECT
+
+  - name: 𝑮𝒐𝒐𝒈𝒍𝒆
+    type: select
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Google_Suite/Google.png
+    proxies:
+      - 𝑷𝒓𝒐𝒙𝒚
+      - 𝑯𝑲
+      - 𝑻𝑾
+      - 𝑼𝑺
+      - 𝑱𝑷
+      - 𝑺𝑮
+
+  - name: 𝑮𝒐𝒐𝒈𝒍𝒆𝑽𝒐𝒊𝒄𝒆
+    type: select
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Google_Suite/Voice.png
+    filter: (?i)美(国|國)|🇺🇸|US|States|American
+    use: 
+      - airport00_Subscription
+      - airport01_Subscription
+      - airport02_Subscription
+
+  - name: 𝑪𝒉𝒊𝒏𝒂
+    type: select
+    proxies: 
+      - 𝑷𝒓𝒐𝒙𝒚
+      - DIRECT
+
+  - name: 𝑭𝒊𝒏𝒂𝒍_𝑴𝒂𝒕𝒄𝒉
+    type: select
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Google_Suite/Google.png
+    proxies:
+      - 𝑷𝒓𝒐𝒙𝒚
+      - Alpha
+      - ctc
+      - ctc2
+
+  - name: 𝑯𝑲
+    type: url-test
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/Hong_Kong.png
+    filter: (?i)香港|🇭🇰|HK|Hong
+    use: 
+      - airport00_Subscription
+      - airport01_Subscription
+      - airport02_Subscription
+
+  - name: 𝑻𝑾
+    type: url-test
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/China.png
+    filter: (?i)台(湾|灣)|🇨🇳|TW|Taiwan
+    use: 
+      - airport00_Subscription
+      - airport01_Subscription
+      - airport02_Subscription
+
+  - name: 𝑼𝑺
+    type: url-test
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/United_States.png
+    filter: (?i)美(国|國)|🇺🇸|US|States|American
+    use: 
+      - airport00_Subscription
+      - airport01_Subscription
+      - airport02_Subscription
+
+  - name: 𝑱𝑷
+    type: url-test
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/Japan.png
+    filter: (?i)日本|🇯🇵|(东|東)京|JP|Japan
+    use: 
+      - airport00_Subscription
+      - airport01_Subscription
+      - airport02_Subscription
+
+  - name: 𝑺𝑮
+    type: url-test
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/Singapore.png
+    filter: (?i)狮|獅|🇸🇬|加坡|SG|Singapore
+    use: 
+      - airport00_Subscription
+      - airport01_Subscription
+      - airport02_Subscription
+
+
+## 远程订阅规则
+##
+##
+
+rule-providers:
+
+  YouTube: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml
+    path: ./Rule/YouTube.yaml
+    interval: 3600
+
+  Netflix: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml
+    path: ./Rule/Netflix.yaml
+    interval: 3600
+
+  Netflix_IP: 
+    type: http
+    behavior: ipcidr
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix_IP.yaml
+    path: ./Rule/Netflix_IP.yaml
+    interval: 3600
+
+  Disney: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney.yaml                                                                                                                                                                                                                                                                                                                                                          
+    path: ./Rule/Disney.yaml
+    interval: 3600
+
+  HBO: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/HBO/HBO.yaml                                                                                                                                                                                                                                                                                                                                                          
+    path: ./Rule/HBO.yaml
+    interval: 3600
+
+  Bahamut: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bahamut/Bahamut.yaml                                                                                                                                                                                                                                                                                                                                                          
+    path: ./Rule/Bahamut.yaml
+    interval: 3600
+
+  Spotify: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.yaml
+    path: ./Rule/Spotify.yaml
+    interval: 3600
+
+  Telegram: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml
+    path: ./Rule/Telegram.yaml
+    interval: 3600
+
+  Facebook: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Facebook/Facebook.yaml
+    path: ./Rule/Facebook.yaml
+    interval: 3600
+
+  Twitter: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml
+    path: ./Rule/Twitter.yaml
+    interval: 3600
+
+  Emby: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/diannaSIN/proxyFile/refs/heads/main/Emby.yaml
+    path: ./Rule/Emby.yaml
+    interval: 3600
+
+  TikTok: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml
+    path: ./Rule/TikTok.yaml
+    interval: 3600
+
+  ChatGPT: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml
+    path: ./Rule/ChatGPT.yaml
+    interval: 3600
+
+  Copilot: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
+    path: ./Rule/Copilot.yaml
+    interval: 3600
+
+  Gemini: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Gemini/Gemini.yaml
+    path: ./Rule/Gemini.yaml
+    interval: 3600
+
+  Claude: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Claude/Claude.yaml
+    path: ./Rule/Claude.yaml
+    interval: 3600
+
+  GoogleVoice: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GoogleVoice/GoogleVoice.yaml
+    path: ./Rule/GoogleVoice.yaml
+    interval: 3600
+
+  Apple: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple_Classical.yaml
+    path: ./Rule/Apple.yaml
+    interval: 86400
+
+  AppleID: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleID/AppleID.yaml
+    path: ./Rule/AppleID.yaml
+    interval: 86400
+
+  AppleProxy: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleProxy/AppleProxy.yaml
+    path: ./Rule/AppleProxy.yaml
+    interval: 86400
+
+  Google: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml
+    path: ./Rule/Google.yaml
+    interval: 3600
+
+  PayPal: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml
+    path: ./Rule/PayPal.yaml
+    interval: 3600
+
+  China: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.yaml
+    path: ./Rule/China.yaml
+    interval: 3600
+
+  Advertising: 
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml
+    path: ./Rule/Advertising.yaml
+    interval: 3600
+    
+  Proxy:
+    type: http
+    behavior: classical
+    url: https://cdn.jsdelivr.net/gh/Semporia/Clash@master/Rule/Proxy.yaml
+    path: ./Rule/Proxy.yaml
+    interval: 3600
+
+## 规则指向设置
+##
+##
+
+rules:
+  # 远程订阅规则指向
+
+  - RULE-SET,Proxy,𝑷𝒓𝒐𝒙𝒚
+  - RULE-SET,YouTube,𝒀𝒐𝒖𝑻𝒖𝒃𝒆
+  - RULE-SET,Netflix,𝑵𝒆𝒕𝒇𝒍𝒊𝒙
+  - RULE-SET,Netflix_IP,𝑵𝒆𝒕𝒇𝒍𝒊𝒙
+  - RULE-SET,HBO,𝑯𝑩𝑶
+  - RULE-SET,Disney,𝑫𝒊𝒔𝒏𝒆𝒚
+  - RULE-SET,Bahamut,动画疯
+  - RULE-SET,Spotify,𝑺𝒑𝒐𝒕𝒊𝒇𝒚
+  - RULE-SET,Telegram,𝑻𝒆𝒍𝒆𝒈𝒓𝒂𝒎
+  - RULE-SET,Facebook,𝑭𝒂𝒄𝒆𝒃𝒐𝒐𝒌
+  - RULE-SET,Twitter,𝑻𝒘𝒊𝒕𝒕𝒆𝒓
+  - RULE-SET,Emby,𝑬𝒎𝒃𝒚
+  - RULE-SET,TikTok,𝑻𝒊𝒌𝑻𝒐𝒌
+  - RULE-SET,ChatGPT,𝑶𝒑𝒆𝒏𝑨𝑰
+  - RULE-SET,Copilot,𝑶𝒑𝒆𝒏𝑨𝑰
+  - RULE-SET,Gemini,𝑶𝒑𝒆𝒏𝑨𝑰
+  - RULE-SET,Claude,𝑶𝒑𝒆𝒏𝑨𝑰
+  - RULE-SET,GoogleVoice,𝑮𝒐𝒐𝒈𝒍𝒆𝑽𝒐𝒊𝒄𝒆
+  - RULE-SET,Apple,𝑨𝒑𝒑𝒍𝒆
+  - RULE-SET,AppleID,𝑨𝒑𝒑𝒍𝒆
+  - RULE-SET,AppleProxy,𝑨𝒑𝒑𝒍𝒆
+  - RULE-SET,Google,𝑮𝒐𝒐𝒈𝒍𝒆
+ # - RULE-SET,Advertising,REJECT
+  - RULE-SET,China,𝑪𝒉𝒊𝒏𝒂
+
+  # 默认规则设置
+  - DOMAIN-SUFFIX,live.cn,𝑪𝒉𝒊𝒏𝒂
+  - PROCESS-NAME,v2ray,DIRECT
+  - PROCESS-NAME,xray,DIRECT
+  - PROCESS-NAME,naive,DIRECT
+  - PROCESS-NAME,trojan,DIRECT
+  - PROCESS-NAME,trojan-go,DIRECT
+  - PROCESS-NAME,ss-local,DIRECT
+  - PROCESS-NAME,privoxy,DIRECT
+  - PROCESS-NAME,leaf,DIRECT
+  - PROCESS-NAME,v2ray.exe,DIRECT
+  - PROCESS-NAME,xray.exe,DIRECT
+  - PROCESS-NAME,naive.exe,DIRECT
+  - PROCESS-NAME,trojan.exe,DIRECT
+  - PROCESS-NAME,trojan-go.exe,DIRECT
+  - PROCESS-NAME,ss-local.exe,DIRECT
+  - PROCESS-NAME,privoxy.exe,DIRECT
+  - PROCESS-NAME,leaf.exe,DIRECT
+  - PROCESS-NAME,Surge,DIRECT
+  - PROCESS-NAME,Surge 2,DIRECT
+  - PROCESS-NAME,Surge 3,DIRECT
+  - PROCESS-NAME,Surge 4,DIRECT
+  - PROCESS-NAME,Surge%202,DIRECT
+  - PROCESS-NAME,Surge%203,DIRECT
+  - PROCESS-NAME,Surge%204,DIRECT
+  - PROCESS-NAME,Thunder,DIRECT
+  - PROCESS-NAME,DownloadService,DIRECT
+  - PROCESS-NAME,qBittorrent,DIRECT
+  - PROCESS-NAME,Transmission,DIRECT
+  - PROCESS-NAME,fdm,DIRECT
+  - PROCESS-NAME,aria2c,DIRECT
+  - PROCESS-NAME,Folx,DIRECT
+  - PROCESS-NAME,NetTransport,DIRECT
+  - PROCESS-NAME,uTorrent,DIRECT
+  - PROCESS-NAME,WebTorrent,DIRECT
+  - PROCESS-NAME,aria2c.exe,DIRECT
+  - PROCESS-NAME,BitComet.exe,DIRECT
+  - PROCESS-NAME,fdm.exe,DIRECT
+  - PROCESS-NAME,NetTransport.exe,DIRECT
+  - PROCESS-NAME,qbittorrent.exe,DIRECT
+  - PROCESS-NAME,Thunder.exe,DIRECT
+  - PROCESS-NAME,ThunderVIP.exe,DIRECT
+  - PROCESS-NAME,transmission-daemon.exe,DIRECT
+  - PROCESS-NAME,transmission-qt.exe,DIRECT
+  - PROCESS-NAME,uTorrent.exe,DIRECT
+  - PROCESS-NAME,WebTorrent.exe,DIRECT
+  - DOMAIN,clash.razord.top,DIRECT
+  - DOMAIN,yacd.haishan.me,DIRECT
+
+  # Local Area Network
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT
+  - IP-CIDR,100.64.0.0/10,DIRECT
+  - IP-CIDR,224.0.0.0/4,DIRECT
+ 
+  # （可选）使用来自 ipipdotnet 的 ChinaIP 以解决数据不准确的问题，使用 ChinaIP.yaml 时可禁用下列直至（包括）「GEOIP,CN」规则
+  - IP-CIDR,119.28.28.28/32,DIRECT
+  - IP-CIDR,182.254.116.0/24,DIRECT
+  - GEOIP,CN,DIRECT
+
+  - MATCH,𝑭𝒊𝒏𝒂𝒍_𝑴𝒂𝒕𝒄𝒉
+
+
+
