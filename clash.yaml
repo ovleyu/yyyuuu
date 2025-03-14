@@ -1,615 +1,440 @@
-
-
-
-
-## 基础设置，部分 一般不做修改
-##
-##
-port: 7890
-socks-port: 7891
-redir-port: 7892
-tproxy-port: 7893
 mixed-port: 7890
+redir-port: 7891
+tproxy-port: 1536
+ipv6: true
 allow-lan: true
-bind-address: "*"
-mode: rule
-log-level: info
-#external-controller: 127.0.0.1:9090
+unified-delay: false
+tcp-concurrent: true
+external-controller: 127.0.0.1:9090
+external-ui: ui
+external-ui-url: "https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
+
+find-process-mode: always
+
 profile:
-  store-selected: false
-  tracing: false
-  store-fake-ip: false
+  store-selected: true
+  store-fake-ip: true
+
+sniffer:
+  enable: false
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - "Mijia Cloud"
+    - "+.push.apple.com"
+
+tun:
+  enable: false
+  stack: system
+  device: tun0
+  dns-hijack:
+    - "any:53"
+    - "tcp://any:53"
+  auto-route: true
+  auto-redirect: false
+  auto-detect-interface: true
+
 dns:
   enable: true
-  ipv6: false
-  default-nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
-    - 119.28.28.28
-    - 223.6.6.6
-    - 1.2.4.8
-    - 8.8.8.8
-    - 180.184.1.1
   listen: 0.0.0.0:1053
+  ipv6: false
+  respect-rules: true
   enhanced-mode: fake-ip
-  fake-ip-range: 198.18.0.1/16
-  use-hosts: true
-  nameserver:
-    - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query
+  fake-ip-range: 198.18.0.0/15
   fake-ip-filter:
-    - '*.lan'
-    - localhost.ptlogin2.qq.com
-    - '+.srv.nintendo.net'
-    - '+.stun.playstation.net'
-    - '+.msftconnecttest.com'
-    - '+.msftncsi.com'
-    - '+.xboxlive.com'
-    - 'msftconnecttest.com'
-    - 'xbox.*.microsoft.com'
-    - '*.battlenet.com.cn'
-    - '*.battlenet.com'
-    - '*.blzstatic.cn'
-    - '*.battle.net'
-
-## 远程订阅
-##
-##
-
-# 机场订阅
-proxy-providers:
-  airport00_Subscription:
-    type: http
-    url: "http://127.0.0.1:3000/download/Alpha"
-    path: ./providers/proxy/aiport00.yaml
-    interval: 86400
-    health-check:
-      enable: true
-      url: http://www.gstatic.com/generate_204
-      interval: 86400
-
-  airport01_Subscription:
-    type: http
-    url: "http://127.0.0.1:3000/download/ctc"
-    path: ./providers/proxy/aiport01.yaml
-    interval: 86400
-    health-check:
-      enable: true
-      url: http://www.gstatic.com/generate_204
-      interval: 86400
-
-  airport02_Subscription:
-    type: http
-    url: "http://127.0.0.1:3000/download/ctc2"
-    path: ./providers/proxy/aiport02.yaml
-    interval: 86400
-    health-check:
-      enable: true
-      url: http://www.gstatic.com/generate_204
-      interval: 86400
+    - "*"
+    - "+.lan"
+    - "+.local"
+    - "+.market.xiaomi.com"
+  default-nameserver:
+    - https://120.53.53.53/dns-query
+    - https://223.5.5.5/dns-query
+  proxy-server-nameserver:
+    - https://120.53.53.53/dns-query
+    - https://223.5.5.5/dns-query
+  nameserver:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+  nameserver-policy:
+    "rule-set:cn,privatedomain":
+      - https://120.53.53.53/dns-query
+      - https://223.5.5.5/dns-query
 
 
-## 策略组
-##
-##
+# 锚点 - 节点订阅的参数 [每小时更新一次订阅节点，每 6 秒一次健康检查]
+NodeParam: &NodeParam {type: http, interval: 3600, health-check: {enable: true, url: 'http://www.google.com/blank.html', interval: 6}}
 
+# 锚点 - 节点订阅
+proxy-providers: 
+  Alpha:
+    url: 'https://links.azurefd.net/api/v1/client/subscribe?token=3968036673013212b9fb5386f855e1ab'
+    <<: *NodeParam
+    path: './providers/proxy/Alpha.yaml'
+    override:
+      additional-prefix: "[Alpha] " # 为订阅节点添加机场名称前缀
+  neon:
+    url: 'https://www.neon-link.com/s/18a695114fdd00ff06bc83075a23b812'
+    <<: *NodeParam
+    path: './providers/proxy/neon.yaml'
+    override:
+      additional-prefix: "[neon] " # 为订阅节点添加机场名称前缀
+      
+
+
+# 锚点 - 节点筛选组
+FilterHK: &FilterHK '^(?=.*((?i)🇭🇰|香港|(\b(HK|Hong)(\d+)?\b)))(?!.*((?i)回国|校园|游戏|🎮|(\b(GAME)\b))).*$'
+FilterTW: &FilterTW '^(?=.*((?i)🇹🇼|台湾|(\b(TW|Tai|Taiwan)(\d+)?\b)))(?!.*((?i)回国|校园|游戏|🎮|(\b(GAME)\b))).*$'
+FilterJP: &FilterJP '^(?=.*((?i)🇯🇵|日本|川日|东京|大阪|泉日|埼玉|(\b(JP|Japan)(\d+)?\b)))(?!.*((?i)回国|校园|游戏|🎮|(\b(GAME)\b))).*$'
+FilterSG: &FilterSG '^(?=.*((?i)🇸🇬|新加坡|狮|(\b(SG|Singapore)(\d+)?\b)))(?!.*((?i)回国|校园|游戏|🎮|(\b(GAME)\b))).*$'
+FilterUS: &FilterUS '^(?=.*((?i)🇺🇸|美国|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|(\b(US|United States)(\d+)?\b)))(?!.*((?i)回国|校园|游戏|🎮|(\b(GAME)\b))).*$'
+FilterGame: &FilterGame '^(?=.*((?i)游戏|🎮|(\b(GAME)(\d+)?\b)))(?!.*((?i)回国|校园)).*$'
+FilterAll: &FilterAll '^(?=.*(.))(?!.*((?i)群|邀请|返利|循环|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|过期|已用|联系|邮箱|工单|贩卖|通知|倒卖|防止|国内|地址|频道|无法|说明|使用|提示|特别|访问|支持|教程|关注|更新|作者|加入|(\b(USE|USED|TOTAL|EXPIRE|EMAIL|Panel|Channel|Author)(\d+)?\b|(\d{4}-\d{2}-\d{2}|\dG)))).*$'
+
+# 策略组参数锚点
+# 锚点 - 时延优选参数 [每 6 秒一次惰性健康检查，容差 20ms，时延超过 2 秒判定为失败，失败 3 次则自动触发健康检查]
+UrlTest: &UrlTest {type: url-test, interval: 6, tolerance: 20, lazy: true, url: 'http://www.google.com/blank.html', disable-udp: false, timeout: 2000, max-failed-times: 3, hidden: true, include-all-providers: true}
+# 锚点 - 故障转移参数 [每 6 秒一次惰性健康检查，时延超过 2 秒判定为失败，失败 3 次则自动触发健康检查]
+FallBack: &FallBack {type: fallback, interval: 6, lazy: true, url: 'http://www.google.com/blank.html', disable-udp: false, timeout: 2000, max-failed-times: 3, hidden: true, include-all-providers: true}
+# 锚点 - 负载均衡参数 [每 6 秒一次惰性健康检查，时延超过 2 秒判定为失败，失败 3 次则自动触发健康检查]
+LoadBalance: &LoadBalance {type: load-balance, interval: 6, lazy: true, url: 'http://www.google.com/blank.html', disable-udp: false, strategy: consistent-hashing, timeout: 2000, max-failed-times: 3, hidden: true, include-all-providers: true}
+# 锚点 - 规则参数 [每小时更新一次订阅规则，更新规则时使用直连策略]
+RuleProviders: &RuleProviders {type: http, behavior: classical, interval: 3600, format: yaml, proxy: DIRECT}
+
+# 策略组
 proxy-groups:
-  - name: 𝑷𝒓𝒐𝒙𝒚
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Universal/Auto_Speed.png
-    type: select
-    proxies: 
-      - Alpha
-      - ctc
-      - ctc2
+  - {name: 节点选择, type: select, proxies: [香港节点, 台湾节点, 日本节点,  新加坡节点, 美国节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/proxy.png"}
+  - {name: 网络测试, type: select, proxies: [全球直连, 香港节点, 台湾节点, 日本节点,  新加坡节点, 美国节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/networktest.png"}
+  - {name: 人工智能, type: select, proxies: [节点选择, 香港节点, 日本节点, 新加坡节点, 美国节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/ai.png"}
+  - {name: Trackerslist, type: select, proxies: [全球直连, 节点选择], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/trackerslist.png"}
+  - {name: 游戏服务, type: select, proxies: [全球直连, 节点选择],icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/games-cn.png"}
+  - {name: 微软服务, type: select, proxies: [全球直连, 节点选择], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/microsoft-cn.png"}
+  - {name: 谷歌服务, type: select, proxies: [全球直连, 节点选择], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/google-cn.png"}
+  - {name: 苹果服务, type: select, proxies: [全球直连, 节点选择], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/apple-cn.png"}
+  - {name: 奈飞视频, type: select, proxies: [节点选择, 香港节点, 日本节点, 新加坡节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/netflix.png"}
+  - {name: 迪士尼+, type: select, proxies: [节点选择, 香港节点, 日本节点, 新加坡节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/disney.png"}
+  - {name: Max, type: select, proxies: [节点选择, 香港节点, 日本节点, 新加坡节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/max.png"}
+  - {name: Prime Video, type: select, proxies: [节点选择, 香港节点, 日本节点, 新加坡节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/primevideo.png"}
+  - {name: Apple TV+, type: select, proxies: [节点选择, 香港节点, 日本节点, 新加坡节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/appletv.png"}
+  - {name: 油管视频, type: select, proxies: [节点选择, 香港节点, 日本节点, 新加坡节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/youtube.png"}
+  - {name: TikTok, type: select, proxies: [节点选择, 香港节点, 日本节点, 新加坡节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/tiktok.png"}
+  - {name: 哔哩哔哩, type: select, proxies: [全球直连, 节点选择, 香港节点, 日本节点, 新加坡节点], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/bilibili.png"}
+  - {name: 直连顶级域名, type: select, proxies: [全球直连, 节点选择], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/cn.png"}
+  - {name: 直连域名, type: select, proxies: [全球直连, 节点选择], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/cn.png"}
+  - {name: 直连 IP, type: select, proxies: [全球直连, 节点选择], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/cnip.png"}
+  - {name: 代理顶级域名, type: select, proxies: [节点选择, 全球直连], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/global.png"}
+  - {name: 代理域名, type: select, proxies: [节点选择, 全球直连], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/global.png"}
+  - {name: 电报消息, type: select, proxies: [节点选择], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/telegram.png"}
+  - {name: 直连软件, type: select, proxies: [全球直连], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/applications.png"}
+  - {name: 私有网络, type: select, proxies: [全球直连], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/private.png"}
+  - {name: 漏网之鱼, type: select, proxies: [节点选择, 全球直连], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/match.png"}
+  - {name: 广告域名, type: select, proxies: [全球拦截, 全球绕过], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/ads.png"}
+  - {name: 全球拦截, type: select, proxies: [REJECT], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/reject.png"}
+  - {name: 全球绕过, type: select, proxies: [PASS], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/pass.png"}
+  - {name: 全球直连, type: select, proxies: [DIRECT], icon: "https://github.com/DustinWin/ruleset_geodata/releases/download/icon/direct.png"}
+  - {name: EMBY, type: select, proxies: [节点选择, 香港节点, 新加坡节点, 美国节点]}
+  - {name: 强制直连, type: select, proxies: [DIRECT]}
+
+  - {name: 香港节点, type: select, proxies: [⏱香港时延优选策略组, 🚥香港故障转移策略组, 🎛香港负载均衡策略组]}
+  - {name: 台湾节点, type: select, proxies: [⏱台湾时延优选策略组, 🚥台湾故障转移策略组, 🎛台湾负载均衡策略组]}
+  - {name: 日本节点, type: select, proxies: [⏱日本时延优选策略组, 🚥日本故障转移策略组, 🎛日本负载均衡策略组]}
+  - {name: 新加坡节点, type: select, proxies: [⏱新加坡时延优选策略组, 🚥新加坡故障转移策略组, 🎛新加坡负载均衡策略组]}
+  - {name: 美国节点, type: select, proxies: [⏱美国时延优选策略组, 🚥美国故障转移策略组, 🎛美国负载均衡策略组]}
 
 
+# 时延优选策略组
+  - {name: ⏱香港时延优选策略组, <<: *UrlTest, filter: *FilterHK}
+  - {name: ⏱台湾时延优选策略组, <<: *UrlTest, filter: *FilterTW}
+  - {name: ⏱日本时延优选策略组, <<: *UrlTest, filter: *FilterJP}
+  - {name: ⏱新加坡时延优选策略组, <<: *UrlTest, filter: *FilterSG}
+  - {name: ⏱美国时延优选策略组, <<: *UrlTest, filter: *FilterUS}
 
-  - name: Alpha
-    icon: https://raw.githubusercontent.com/fmz200/wool_scripts/main/icons/apps/Category_News.png
-    type: select
-    use: 
-      - airport00_Subscription
-
-  - name: ctc
-    icon: https://raw.githubusercontent.com/fmz200/wool_scripts/main/icons/apps/Category_News.png
-    type: select
-    use: 
-      - airport01_Subscription
-
-  - name: ctc2
-    icon: https://raw.githubusercontent.com/fmz200/wool_scripts/main/icons/apps/Category_News.png
-    type: select
-    use: 
-      - airport02_Subscription
+# 故障转移策略组
+  - {name: 🚥香港故障转移策略组, <<: *FallBack, filter: *FilterHK}
+  - {name: 🚥台湾故障转移策略组, <<: *FallBack, filter: *FilterTW}
+  - {name: 🚥日本故障转移策略组, <<: *FallBack, filter: *FilterJP}
+  - {name: 🚥新加坡故障转移策略组, <<: *FallBack, filter: *FilterSG}
+  - {name: 🚥美国故障转移策略组, <<: *FallBack, filter: *FilterUS}
 
 
-  - name: 𝒀𝒐𝒖𝑻𝒖𝒃𝒆
-    type: select
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/YouTube.png
-    proxies:
-      - 𝑷𝒓𝒐𝒙𝒚
-      - 𝑯𝑲
-      - 𝑻𝑾
-      - 𝑼𝑺
-      - 𝑱𝑷
-      - 𝑺𝑮
+# 负载均衡策略组
+  - {name: 🎛香港负载均衡策略组, <<: *LoadBalance, filter: *FilterHK}
+  - {name: 🎛台湾负载均衡策略组, <<: *LoadBalance, filter: *FilterTW}
+  - {name: 🎛日本负载均衡策略组, <<: *LoadBalance, filter: *FilterJP}
+  - {name: 🎛新加坡负载均衡策略组, <<: *LoadBalance, filter: *FilterSG}
+  - {name: 🎛美国负载均衡策略组, <<: *LoadBalance, filter: *FilterUS}
 
-  - name: 𝑵𝒆𝒕𝒇𝒍𝒊𝒙
-    type: select
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Universal/Netflix.png
-    proxies:
-      - 𝑷𝒓𝒐𝒙𝒚
-      - 𝑯𝑲
-      - 𝑻𝑾
-      - 𝑼𝑺
-      - 𝑱𝑷
-      - 𝑺𝑮
-
-  - name: 𝑫𝒊𝒔𝒏𝒆𝒚
-    type: select
-    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/disney(blue).png
-    proxies:
-      - 𝑷𝒓𝒐𝒙𝒚
-      - 𝑯𝑲
-      - 𝑻𝑾
-      - 𝑼𝑺
-      - 𝑱𝑷
-      - 𝑺𝑮
-
-  - name: 𝑯𝑩𝑶
-    type: select
-    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/HBO.png
-    proxies:
-      - 𝑷𝒓𝒐𝒙𝒚
-      - 𝑯𝑲
-      - 𝑻𝑾
-      - 𝑼𝑺
-      - 𝑱𝑷
-      - 𝑺𝑮
-
-  - name: 动画疯
-    type: select
-    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/bahamute.png
-    proxies: 
-      - Alpha
-      - ctc
-      - ctc2
-
-  - name: 𝑺𝒑𝒐𝒕𝒊𝒇𝒚
-    type: select
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/Spotify.png
-    proxies:
-      - 𝑷𝒓𝒐𝒙𝒚
-      - 𝑯𝑲
-      - 𝑻𝑾
-      - 𝑼𝑺
-      - 𝑱𝑷
-      - 𝑺𝑮
-
-  - name: 𝑻𝒆𝒍𝒆𝒈𝒓𝒂𝒎
-    type: select
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/Telegram.png
-    filter: (?i)狮|獅|🇸🇬|加坡|SG|Singapore
-    use: 
-      - airport00_Subscription
-      - airport01_Subscription
-      - airport02_Subscription
- 
-  - name: 𝑭𝒂𝒄𝒆𝒃𝒐𝒐𝒌
-    type: select
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/Facebook.png
-    proxies:
-      - 𝑷𝒓𝒐𝒙𝒚
-      - 𝑯𝑲
-      - 𝑻𝑾
-      - 𝑼𝑺
-      - 𝑱𝑷
-      - 𝑺𝑮
-
-  - name: 𝑻𝒘𝒊𝒕𝒕𝒆𝒓
-    type: select
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/Twitter.png
-    proxies:
-      - 𝑷𝒓𝒐𝒙𝒚
-      - 𝑯𝑲
-      - 𝑻𝑾
-      - 𝑼𝑺
-      - 𝑱𝑷
-      - 𝑺𝑮
-
-  - name: 𝑬𝒎𝒃𝒚
-    type: select
-    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/emby.png
-    filter: (?i)美(国|國)|🇺🇸|US|States|American
-    proxies: 
-      - Alpha
-      - ctc
-      - ctc2
-
-  - name: 𝑻𝒊𝒌𝑻𝒐𝒌
-    type: select
-    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/emby.png
-    proxies: 
-      - 𝑻𝑾
-      - 𝑼𝑺
-      - 𝑱𝑷
-
-  - name: 𝑶𝒑𝒆𝒏𝑨𝑰
-    type: select
-    icon: https://raw.githubusercontent.com/lige47/QuanX-icon-rule/main/icon/chatgpt4.0.png
-    filter: (?i)美(国|國)|🇺🇸|US|States|American
-    use: 
-      - airport00_Subscription
-      - airport01_Subscription
-      - airport02_Subscription
-
-
-  - name: 𝑨𝒑𝒑𝒍𝒆
-    type: select
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Social_Media/Apple.png
-    proxies:
-      - 𝑻𝑾
-      - 𝑼𝑺
-      - 𝑱𝑷
-      - DIRECT
-
-  - name: 𝑮𝒐𝒐𝒈𝒍𝒆
-    type: select
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Google_Suite/Google.png
-    proxies:
-      - 𝑷𝒓𝒐𝒙𝒚
-      - 𝑯𝑲
-      - 𝑻𝑾
-      - 𝑼𝑺
-      - 𝑱𝑷
-      - 𝑺𝑮
-
-  - name: 𝑮𝒐𝒐𝒈𝒍𝒆𝑽𝒐𝒊𝒄𝒆
-    type: select
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Google_Suite/Voice.png
-    filter: (?i)美(国|國)|🇺🇸|US|States|American
-    use: 
-      - airport00_Subscription
-      - airport01_Subscription
-      - airport02_Subscription
-
-  - name: 𝑪𝒉𝒊𝒏𝒂
-    type: select
-    proxies: 
-      - 𝑷𝒓𝒐𝒙𝒚
-      - DIRECT
-
-  - name: 𝑭𝒊𝒏𝒂𝒍_𝑴𝒂𝒕𝒄𝒉
-    type: select
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Google_Suite/Google.png
-    proxies:
-      - 𝑷𝒓𝒐𝒙𝒚
-      - Alpha
-      - ctc
-      - ctc2
-
-  - name: 𝑯𝑲
-    type: url-test
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/Hong_Kong.png
-    filter: (?i)香港|🇭🇰|HK|Hong
-    use: 
-      - airport00_Subscription
-      - airport01_Subscription
-      - airport02_Subscription
-
-  - name: 𝑻𝑾
-    type: url-test
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/China.png
-    filter: (?i)台(湾|灣)|🇨🇳|TW|Taiwan
-    use: 
-      - airport00_Subscription
-      - airport01_Subscription
-      - airport02_Subscription
-
-  - name: 𝑼𝑺
-    type: url-test
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/United_States.png
-    filter: (?i)美(国|國)|🇺🇸|US|States|American
-    use: 
-      - airport00_Subscription
-      - airport01_Subscription
-      - airport02_Subscription
-
-  - name: 𝑱𝑷
-    type: url-test
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/Japan.png
-    filter: (?i)日本|🇯🇵|(东|東)京|JP|Japan
-    use: 
-      - airport00_Subscription
-      - airport01_Subscription
-      - airport02_Subscription
-
-  - name: 𝑺𝑮
-    type: url-test
-    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/Singapore.png
-    filter: (?i)狮|獅|🇸🇬|加坡|SG|Singapore
-    use: 
-      - airport00_Subscription
-      - airport01_Subscription
-      - airport02_Subscription
-
-
-## 远程订阅规则
-##
-##
 
 rule-providers:
+  强制直连:
+    type: file
+    behavior: domain
+    format: yaml
+    path: ./rules/强制直连.yaml
 
-  YouTube: 
+  EMBY:
+    type: file
+    behavior: domain
+    format: yaml
+    path: ./rules/EMBY.yaml
+
+  fakeip-filter:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/fakeip-filter.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/fakeip-filter.mrs"
+    interval: 86400
+
+  private:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/private.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/private.mrs"
+    interval: 86400
+
+  ads:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/ads.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/ads.mrs"
+    interval: 86400
+
+  trackerslist:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/trackerslist.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/trackerslist.mrs"
+    interval: 86400
+
+  applications:
     type: http
     behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml
-    path: ./Rule/YouTube.yaml
-    interval: 3600
+    format: text
+    path: ./rules/applications.list
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/applications.list"
+    interval: 86400
 
-  Netflix: 
+  microsoft-cn:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/microsoft-cn.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/microsoft-cn.mrs"
+    interval: 86400
+
+  apple-cn:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/apple-cn.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/apple-cn.mrs"
+    interval: 86400
+
+  google-cn:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/google-cn.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/google-cn.mrs"
+    interval: 86400
+
+  games-cn:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/games-cn.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/games-cn.mrs"
+    interval: 86400
+
+  netflix:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/netflix.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/netflix.mrs"
+    interval: 86400
+
+  disney:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/disney.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/disney.mrs"
+    interval: 86400
+
+  max:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/max.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/max.mrs"
+    interval: 86400
+
+  primevideo:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/primevideo.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/primevideo.mrs"
+    interval: 86400
+
+  appletv:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/appletv.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/appletv.mrs"
+    interval: 86400
+
+  youtube:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/youtube.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/youtube.mrs"
+    interval: 86400
+
+  tiktok:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/tiktok.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/tiktok.mrs"
+    interval: 86400
+
+  bilibili:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/bilibili.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/bilibili.mrs"
+    interval: 86400
+
+  ai:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/ai.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/ai.mrs"
+    interval: 86400
+
+  networktest:
     type: http
     behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml
-    path: ./Rule/Netflix.yaml
-    interval: 3600
+    format: text
+    path: ./rules/networktest.list
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/networktest.list"
+    interval: 86400
 
-  Netflix_IP: 
+  tld-proxy:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/tld-proxy.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/tld-proxy.mrs"
+    interval: 86400
+
+  proxy:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/proxy.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/proxy.mrs"
+    interval: 86400
+
+  tld-cn:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/tld-cn.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/tld-cn.mrs"
+    interval: 86400
+
+  cn:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/cn.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cn.mrs"
+    interval: 86400
+
+  privatedomain:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rules/privatedomain.mrs
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs"
+    interval: 86400
+  
+  privateip:
     type: http
     behavior: ipcidr
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix_IP.yaml
-    path: ./Rule/Netflix_IP.yaml
-    interval: 3600
-
-  Disney: 
+    format: mrs
+    path: ./rules/privateip.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/privateip.mrs"
+    interval: 86400
+  cnip:
     type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney.yaml                                                                                                                                                                                                                                                                                                                                                          
-    path: ./Rule/Disney.yaml
-    interval: 3600
-
-  HBO: 
+    behavior: ipcidr
+    format: mrs
+    path: ./rules/cnip.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/cnip.mrs"
+    interval: 86400
+  netflixip:
     type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/HBO/HBO.yaml                                                                                                                                                                                                                                                                                                                                                          
-    path: ./Rule/HBO.yaml
-    interval: 3600
-
-  Bahamut: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bahamut/Bahamut.yaml                                                                                                                                                                                                                                                                                                                                                          
-    path: ./Rule/Bahamut.yaml
-    interval: 3600
-
-  Spotify: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.yaml
-    path: ./Rule/Spotify.yaml
-    interval: 3600
-
-  Telegram: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml
-    path: ./Rule/Telegram.yaml
-    interval: 3600
-
-  Facebook: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Facebook/Facebook.yaml
-    path: ./Rule/Facebook.yaml
-    interval: 3600
-
-  Twitter: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml
-    path: ./Rule/Twitter.yaml
-    interval: 3600
-
-  Emby: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/diannaSIN/proxyFile/refs/heads/main/Emby.yaml
-    path: ./Rule/Emby.yaml
-    interval: 3600
-
-  TikTok: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml
-    path: ./Rule/TikTok.yaml
-    interval: 3600
-
-  ChatGPT: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml
-    path: ./Rule/ChatGPT.yaml
-    interval: 3600
-
-  Copilot: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
-    path: ./Rule/Copilot.yaml
-    interval: 3600
-
-  Gemini: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Gemini/Gemini.yaml
-    path: ./Rule/Gemini.yaml
-    interval: 3600
-
-  Claude: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Claude/Claude.yaml
-    path: ./Rule/Claude.yaml
-    interval: 3600
-
-  GoogleVoice: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GoogleVoice/GoogleVoice.yaml
-    path: ./Rule/GoogleVoice.yaml
-    interval: 3600
-
-  Apple: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple_Classical.yaml
-    path: ./Rule/Apple.yaml
+    behavior: ipcidr
+    format: mrs
+    path: ./rules/netflixip.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/netflixip.mrs"
     interval: 86400
 
-  AppleID: 
+  telegramip:
     type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleID/AppleID.yaml
-    path: ./Rule/AppleID.yaml
+    behavior: ipcidr
+    format: mrs
+    path: ./rules/telegramip.mrs
+    url: "https://github.com/DustinWin/ruleset_geodata/releases/download/mihomo-ruleset/telegramip.mrs"
     interval: 86400
 
-  AppleProxy: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleProxy/AppleProxy.yaml
-    path: ./Rule/AppleProxy.yaml
-    interval: 86400
-
-  Google: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml
-    path: ./Rule/Google.yaml
-    interval: 3600
-
-  PayPal: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml
-    path: ./Rule/PayPal.yaml
-    interval: 3600
-
-  China: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.yaml
-    path: ./Rule/China.yaml
-    interval: 3600
-
-  Advertising: 
-    type: http
-    behavior: classical
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml
-    path: ./Rule/Advertising.yaml
-    interval: 3600
-    
-  Proxy:
-    type: http
-    behavior: classical
-    url: https://cdn.jsdelivr.net/gh/Semporia/Clash@master/Rule/Proxy.yaml
-    path: ./Rule/Proxy.yaml
-    interval: 3600
-
-## 规则指向设置
-##
-##
 
 rules:
-  # 远程订阅规则指向
-
-  - RULE-SET,Proxy,𝑷𝒓𝒐𝒙𝒚
-  - RULE-SET,YouTube,𝒀𝒐𝒖𝑻𝒖𝒃𝒆
-  - RULE-SET,Netflix,𝑵𝒆𝒕𝒇𝒍𝒊𝒙
-  - RULE-SET,Netflix_IP,𝑵𝒆𝒕𝒇𝒍𝒊𝒙
-  - RULE-SET,HBO,𝑯𝑩𝑶
-  - RULE-SET,Disney,𝑫𝒊𝒔𝒏𝒆𝒚
-  - RULE-SET,Bahamut,动画疯
-  - RULE-SET,Spotify,𝑺𝒑𝒐𝒕𝒊𝒇𝒚
-  - RULE-SET,Telegram,𝑻𝒆𝒍𝒆𝒈𝒓𝒂𝒎
-  - RULE-SET,Facebook,𝑭𝒂𝒄𝒆𝒃𝒐𝒐𝒌
-  - RULE-SET,Twitter,𝑻𝒘𝒊𝒕𝒕𝒆𝒓
-  - RULE-SET,Emby,𝑬𝒎𝒃𝒚
-  - RULE-SET,TikTok,𝑻𝒊𝒌𝑻𝒐𝒌
-  - RULE-SET,ChatGPT,𝑶𝒑𝒆𝒏𝑨𝑰
-  - RULE-SET,Copilot,𝑶𝒑𝒆𝒏𝑨𝑰
-  - RULE-SET,Gemini,𝑶𝒑𝒆𝒏𝑨𝑰
-  - RULE-SET,Claude,𝑶𝒑𝒆𝒏𝑨𝑰
-  - RULE-SET,GoogleVoice,𝑮𝒐𝒐𝒈𝒍𝒆𝑽𝒐𝒊𝒄𝒆
-  - RULE-SET,Apple,𝑨𝒑𝒑𝒍𝒆
-  - RULE-SET,AppleID,𝑨𝒑𝒑𝒍𝒆
-  - RULE-SET,AppleProxy,𝑨𝒑𝒑𝒍𝒆
-  - RULE-SET,Google,𝑮𝒐𝒐𝒈𝒍𝒆
- # - RULE-SET,Advertising,REJECT
-  - RULE-SET,China,𝑪𝒉𝒊𝒏𝒂
-
-  # 默认规则设置
-  - DOMAIN-SUFFIX,live.cn,𝑪𝒉𝒊𝒏𝒂
-  - PROCESS-NAME,v2ray,DIRECT
-  - PROCESS-NAME,xray,DIRECT
-  - PROCESS-NAME,naive,DIRECT
-  - PROCESS-NAME,trojan,DIRECT
-  - PROCESS-NAME,trojan-go,DIRECT
-  - PROCESS-NAME,ss-local,DIRECT
-  - PROCESS-NAME,privoxy,DIRECT
-  - PROCESS-NAME,leaf,DIRECT
-  - PROCESS-NAME,v2ray.exe,DIRECT
-  - PROCESS-NAME,xray.exe,DIRECT
-  - PROCESS-NAME,naive.exe,DIRECT
-  - PROCESS-NAME,trojan.exe,DIRECT
-  - PROCESS-NAME,trojan-go.exe,DIRECT
-  - PROCESS-NAME,ss-local.exe,DIRECT
-  - PROCESS-NAME,privoxy.exe,DIRECT
-  - PROCESS-NAME,leaf.exe,DIRECT
-  - PROCESS-NAME,Surge,DIRECT
-  - PROCESS-NAME,Surge 2,DIRECT
-  - PROCESS-NAME,Surge 3,DIRECT
-  - PROCESS-NAME,Surge 4,DIRECT
-  - PROCESS-NAME,Surge%202,DIRECT
-  - PROCESS-NAME,Surge%203,DIRECT
-  - PROCESS-NAME,Surge%204,DIRECT
-  - PROCESS-NAME,Thunder,DIRECT
-  - PROCESS-NAME,DownloadService,DIRECT
-  - PROCESS-NAME,qBittorrent,DIRECT
-  - PROCESS-NAME,Transmission,DIRECT
-  - PROCESS-NAME,fdm,DIRECT
-  - PROCESS-NAME,aria2c,DIRECT
-  - PROCESS-NAME,Folx,DIRECT
-  - PROCESS-NAME,NetTransport,DIRECT
-  - PROCESS-NAME,uTorrent,DIRECT
-  - PROCESS-NAME,WebTorrent,DIRECT
-  - PROCESS-NAME,aria2c.exe,DIRECT
-  - PROCESS-NAME,BitComet.exe,DIRECT
-  - PROCESS-NAME,fdm.exe,DIRECT
-  - PROCESS-NAME,NetTransport.exe,DIRECT
-  - PROCESS-NAME,qbittorrent.exe,DIRECT
-  - PROCESS-NAME,Thunder.exe,DIRECT
-  - PROCESS-NAME,ThunderVIP.exe,DIRECT
-  - PROCESS-NAME,transmission-daemon.exe,DIRECT
-  - PROCESS-NAME,transmission-qt.exe,DIRECT
-  - PROCESS-NAME,uTorrent.exe,DIRECT
-  - PROCESS-NAME,WebTorrent.exe,DIRECT
-  - DOMAIN,clash.razord.top,DIRECT
-  - DOMAIN,yacd.haishan.me,DIRECT
-
-  # Local Area Network
-  - IP-CIDR,192.168.0.0/16,DIRECT
-  - IP-CIDR,10.0.0.0/8,DIRECT
-  - IP-CIDR,172.16.0.0/12,DIRECT
-  - IP-CIDR,127.0.0.0/8,DIRECT
-  - IP-CIDR,100.64.0.0/10,DIRECT
-  - IP-CIDR,224.0.0.0/4,DIRECT
- 
-  # （可选）使用来自 ipipdotnet 的 ChinaIP 以解决数据不准确的问题，使用 ChinaIP.yaml 时可禁用下列直至（包括）「GEOIP,CN」规则
-  - IP-CIDR,119.28.28.28/32,DIRECT
-  - IP-CIDR,182.254.116.0/24,DIRECT
-  - GEOIP,CN,DIRECT
-
-  - MATCH,𝑭𝒊𝒏𝒂𝒍_𝑴𝒂𝒕𝒄𝒉
+  - RULE-SET,private,私有网络
+  - RULE-SET,ads,广告域名
+  - RULE-SET,trackerslist,Trackerslist
+  - RULE-SET,applications,直连软件
+  - RULE-SET,microsoft-cn,微软服务
+  - RULE-SET,apple-cn,苹果服务
+  - RULE-SET,google-cn,谷歌服务
+  - RULE-SET,games-cn,游戏服务
+  - RULE-SET,netflix,奈飞视频
+  - RULE-SET,disney,迪士尼+
+  - RULE-SET,max,Max
+  - RULE-SET,primevideo,Prime Video
+  - RULE-SET,appletv,Apple TV+
+  - RULE-SET,youtube,油管视频
+  - RULE-SET,tiktok,TikTok
+  - RULE-SET,bilibili,哔哩哔哩
+  - RULE-SET,ai,人工智能
+  - RULE-SET,networktest,网络测试
+  - RULE-SET,tld-proxy,代理顶级域名
+  - RULE-SET,proxy,代理域名
+  - RULE-SET,tld-cn,直连顶级域名
+  - RULE-SET,cn,直连域名
+  - RULE-SET,EMBY,EMBY
+  - RULE-SET,强制直连,强制直连
+  - RULE-SET,privateip,私有网络,no-resolve
+  - RULE-SET,cnip,直连 IP
+  - RULE-SET,netflixip,奈飞视频,no-resolve
+  - RULE-SET,telegramip,电报消息,no-resolve
 
 
 
